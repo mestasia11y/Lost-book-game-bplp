@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مغامرة الكتاب المفقود - المكتبة الرئيسية للمطالعة العمومية لولاية غليزان</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Tajawal & Cairo -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti for Victory -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        library: {
+                            50: '#fdf8f6',
+                            100: '#f2e8e1',
+                            200: '#e5d1c3',
+                            500: '#b87333',
+                            700: '#8c4819',
+                            800: '#5c2d0c',
+                            900: '#381905',
+                        }
+                    },
+                    fontFamily: {
+                        cairo: ['Cairo', 'sans-serif'],
+                        tajawal: ['Tajawal', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'book': '0 15px 30px -5px rgba(0, 0, 0, 0.4), 0 0 15px rgba(184, 115, 51, 0.2)',
+                        'glow': '0 0 25px rgba(251, 191, 36, 0.4)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: linear-gradient(135deg, #1a0f07 0%, #2c1810 50%, #120904 100%);
+            color: #f3f4f6;
+            min-height: 100vh;
+        }
+
+        .book-page-bg {
+            background-color: #fbf7ee;
+            background-image: radial-gradient(#e2d7c5 1px, transparent 1px);
+            background-size: 20px 20px;
+            color: #2d241e;
+        }
+
+        /* Animations */
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-6px) rotate(1deg); }
+        }
+
+        .animate-float {
+            animation: floatSlow 4s ease-in-out infinite;
+        }
+
+        .choice-btn {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .choice-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Printable styles */
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+            }
+            header, #game-stats, .no-print {
+                display: none !important;
+            }
+            #screen-victory {
+                border: none !important;
+                box-shadow: none !important;
+                background: transparent !important;
+                padding: 0 !important;
+            }
+            #certificate-card {
+                border: 4px double #8c4819 !important;
+                box-shadow: none !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #2c1810;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #b87333;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen overflow-x-hidden selection:bg-amber-500 selection:text-white">
+
+    <!-- Permanent Watermark SM/1628 (Visible throughout the game) -->
+    <div class="fixed bottom-3 left-3 z-50 bg-black/70 backdrop-blur-md border border-amber-500/40 text-amber-300 font-mono text-xs font-bold px-3 py-1 rounded-lg shadow-lg pointer-events-none select-none flex items-center space-x-1.5 space-x-reverse opacity-90">
+        <i class="fa-solid fa-shield-halved text-amber-400"></i>
+        <span>SM/1628</span>
+    </div>
+
+    <header class="bg-black/60 backdrop-blur-md border-b border-amber-900/40 sticky top-0 z-40">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <span class="text-3xl animate-bounce">📚</span>
+                <div>
+                    <h1 class="text-base sm:text-lg font-bold font-cairo text-amber-400 leading-tight">مغامرة الكتاب المفقود</h1>
+                    <p class="text-xs text-amber-200/70">المكتبة الرئيسية للمطالعة العمومية لولاية غليزان</p>
+                </div>
+            </div>
+
+            <!-- Stats Panel -->
+            <div id="game-stats" class="hidden flex items-center space-x-3 space-x-reverse bg-amber-950/80 border border-amber-800/60 rounded-full px-3 py-1.5 text-xs sm:text-sm">
+                <!-- Book Integrity / Health -->
+                <div class="flex items-center space-x-1 space-x-reverse" title="سلامة الأوراق">
+                    <i class="fa-solid fa-leaf text-emerald-400"></i>
+                    <span id="health-text" class="font-bold text-emerald-300">100%</span>
+                </div>
+                <div class="h-4 w-[1px] bg-amber-800"></div>
+                <!-- Points -->
+                <div class="flex items-center space-x-1 space-x-reverse" title="نقاط المعرفة">
+                    <i class="fa-solid fa-star text-amber-400"></i>
+                    <span id="score-text" class="font-bold text-amber-300">0</span>
+                </div>
+                <div class="h-4 w-[1px] bg-amber-800"></div>
+                <!-- Question Counter -->
+                <div class="flex items-center space-x-1 space-x-reverse text-amber-200" title="تقدم الأسئلة">
+                    <i class="fa-solid fa-list-check text-amber-400"></i>
+                    <span id="question-progress-text" class="font-bold">1 / 20</span>
+                </div>
+                <div class="h-4 w-[1px] bg-amber-800"></div>
+                <!-- Sound Toggle -->
+                <button id="sound-toggle-btn" onclick="toggleAudio()" class="text-amber-300 hover:text-amber-100 transition">
+                    <i id="sound-icon" class="fa-solid fa-volume-high"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow flex items-center justify-center p-4 sm:p-6 md:p-8">
+        <div class="w-full max-w-4xl">
+
+            <!-- SCREEN 1: WELCOME & REGISTRATION -->
+            <section id="screen-welcome" class="bg-slate-900/90 border border-amber-900/50 rounded-2xl shadow-book backdrop-blur-lg p-6 md:p-10 text-center relative overflow-hidden">
+                <div class="absolute -top-24 -left-24 w-60 h-60 bg-amber-600/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute -bottom-24 -right-24 w-60 h-60 bg-yellow-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                <!-- Algeria / Ministry Header Badge -->
+                <div class="bg-amber-950/60 border border-amber-700/40 rounded-xl p-3 mb-6 max-w-lg mx-auto text-amber-200 text-xs sm:text-sm font-cairo leading-relaxed">
+                    <div class="font-bold text-amber-300">الجمهورية الجزائرية الديمقراطية الشعبية</div>
+                    <div>وزارة الثقافة والفنون</div>
+                    <div class="font-semibold text-amber-400 text-xs sm:text-sm mt-0.5">المكتبة الرئيسية للمطالعة العمومية لولاية غليزان</div>
+                </div>
+
+                <div class="inline-block p-4 bg-amber-950/60 rounded-full border border-amber-500/30 mb-3 animate-float">
+                    <i class="fa-solid fa-book-open-reader text-5xl text-amber-400"></i>
+                </div>
+
+                <h2 class="text-2xl sm:text-4xl font-extrabold font-cairo text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-yellow-500 mb-3">
+                    أهلاً بك في مغامرة "الكتاب المفقود"!
+                </h2>
+                <p class="text-amber-100/90 text-sm sm:text-base max-w-2xl mx-auto mb-6 leading-relaxed">
+                    تخيل أنك <span class="text-amber-300 font-bold">كتاب فريد</span> استيقظت ليلاً في المكتبة الرئيسية للمطالعة العمومية لولاية غليزان لتجد نفسك بعيداً عن رفّك المخصص. عليك الإجابة عن <span class="text-amber-400 font-bold underline">20 سؤالاً علمياً ومكتبياً</span> وحماية أوراقك للوصول إلى رفّك الصحيح!
+                </p>
+
+                <div class="max-w-md mx-auto bg-black/40 p-5 rounded-xl border border-amber-900/50 text-right mb-6">
+                    <label class="block text-amber-300 font-bold mb-2 text-sm">
+                        <i class="fa-solid fa-id-card text-amber-400 ml-2"></i>أدخل اسمك يا بطل المكتبة:
+                    </label>
+                    <input type="text" id="player-name-input" placeholder="مثال: محمد الشغوف" 
+                           class="w-full bg-slate-800 border border-amber-700/60 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/30 font-bold text-center mb-5">
+
+                    <!-- Character/Book Persona Selector -->
+                    <label class="block text-amber-300 font-bold mb-3 text-sm">
+                        <i class="fa-solid fa-book-bookmark text-amber-400 ml-2"></i>اختر نوع كتابك المفضل:
+                    </label>
+                    <div class="grid grid-cols-2 gap-2.5" id="persona-selector">
+                        <button type="button" onclick="selectPersona('dict')" class="persona-btn active bg-amber-950/80 border-2 border-amber-400 rounded-lg p-2.5 text-center transition hover:bg-amber-900/50">
+                            <div class="text-2xl mb-1">📖</div>
+                            <div class="text-xs font-bold text-amber-200">القاموس / المعجم</div>
+                            <div class="text-[10px] text-amber-400/80">شروحات ومراجع</div>
+                        </button>
+                        <button type="button" onclick="selectPersona('story')" class="persona-btn bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-center transition hover:bg-amber-900/50">
+                            <div class="text-2xl mb-1">🎨</div>
+                            <div class="text-xs font-bold text-slate-200">قصص الأطفال</div>
+                            <div class="text-[10px] text-slate-400">رسومات ومغامرات</div>
+                        </button>
+                        <button type="button" onclick="selectPersona('science')" class="persona-btn bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-center transition hover:bg-amber-900/50">
+                            <div class="text-2xl mb-1">🔬</div>
+                            <div class="text-xs font-bold text-slate-200">كتاب العلوم</div>
+                            <div class="text-[10px] text-slate-400">حقائق وتجارب</div>
+                        </button>
+                        <button type="button" onclick="selectPersona('atlas')" class="persona-btn bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-center transition hover:bg-amber-900/50">
+                            <div class="text-2xl mb-1">🗺️</div>
+                            <div class="text-xs font-bold text-slate-200">أطلس الخرائط</div>
+                            <div class="text-[10px] text-slate-400">جغرافيا ودول</div>
+                        </button>
+                    </div>
+                </div>
+
+                <button onclick="startGame()" class="w-full sm:w-auto px-10 py-3.5 bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 hover:from-amber-400 hover:to-amber-600 text-slate-950 font-black text-lg rounded-xl shadow-glow transition transform hover:scale-105 active:scale-95 flex items-center justify-center space-x-3 space-x-reverse mx-auto">
+                    <span>انطلق في رحلة الـ 20 سؤالاً</span>
+                    <i class="fa-solid fa-rocket text-lg"></i>
+                </button>
+            </section>
+
+            <!-- SCREEN 2: GAMEPLAY CARD (20 Questions Interactive Quest) -->
+            <section id="screen-gameplay" class="hidden bg-slate-900/90 border border-amber-900/60 rounded-2xl shadow-book backdrop-blur-xl overflow-hidden transition-all duration-500">
+                <!-- Chapter Progress Header -->
+                <div class="bg-amber-950/80 border-b border-amber-800/50 p-3.5 px-6 flex items-center justify-between flex-wrap gap-2">
+                    <div class="flex items-center space-x-3 space-x-reverse">
+                        <span id="question-badge" class="px-3 py-1 bg-amber-500/20 border border-amber-400/40 text-amber-300 rounded-full text-xs font-bold">
+                            السؤال 1 من 20
+                        </span>
+                        <h3 id="scene-title" class="text-base sm:text-lg font-bold font-cairo text-amber-200">
+                            عنوان المحطة
+                        </h3>
+                    </div>
+                    <div class="text-xs text-amber-300/80 flex items-center space-x-2 space-x-reverse">
+                        <i class="fa-solid fa-user-circle"></i>
+                        <span id="display-player-name">اسم القارئ</span>
+                    </div>
+                </div>
+
+                <!-- Global Progress Bar -->
+                <div class="w-full bg-slate-950 h-2 relative border-b border-amber-900/30">
+                    <div id="progress-bar-inner" class="bg-gradient-to-r from-amber-500 to-amber-300 h-full w-[5%] transition-all duration-500"></div>
+                </div>
+
+                <!-- Story & Question Main Content -->
+                <div class="p-5 sm:p-7">
+                    <!-- Visual Illustration Box -->
+                    <div id="scene-visual" class="w-full h-36 sm:h-44 bg-slate-950 rounded-xl border border-amber-900/40 mb-5 flex flex-col items-center justify-center relative overflow-hidden text-center p-3">
+                        <div id="scene-icon-bg" class="text-5xl sm:text-6xl mb-1 animate-float">🔍</div>
+                        <p id="scene-subtitle" class="text-xs text-amber-300/80 font-medium max-w-md">
+                            تحديات ومفاهيم المكتبة العمومية
+                        </p>
+                    </div>
+
+                    <!-- Story & Question Text Box -->
+                    <div class="book-page-bg p-4 sm:p-5 rounded-xl border border-amber-900/30 shadow-inner mb-5 relative">
+                        <p id="scene-text" class="text-stone-900 text-sm sm:text-base leading-relaxed font-semibold">
+                            نص السؤال المكتبي سيظهر هنا...
+                        </p>
+                    </div>
+
+                    <!-- Context Safety Advice Box (Neutral Tip) -->
+                    <div id="challenge-alert" class="mb-5 p-3.5 bg-amber-500/10 border border-amber-500/40 rounded-xl flex items-start space-x-3 space-x-reverse text-amber-200 text-xs sm:text-sm">
+                        <i class="fa-solid fa-lightbulb text-amber-400 text-lg mt-0.5"></i>
+                        <div>
+                            <span class="font-bold block text-amber-300" id="challenge-alert-title">تنويه هام للحفاظ على الكتب</span>
+                            <span id="challenge-alert-desc">اقرأ خيارات الإجابة بدقة واختر السلوك المكتبي أو العلمي الصحيح.</span>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Choices Container (Completely Neutral, No Answers Revealed) -->
+                    <div id="choices-container" class="space-y-2.5">
+                        <!-- Choices generated dynamically without highlighting -->
+                    </div>
+
+                    <!-- Feedback Box (Appears ONLY AFTER user chooses an answer) -->
+                    <div id="feedback-modal" class="hidden mt-5 p-4 rounded-xl border text-right transition-all">
+                        <div class="flex items-center space-x-2 space-x-reverse mb-2">
+                            <span id="feedback-icon" class="text-2xl">💡</span>
+                            <h4 id="feedback-title" class="font-bold text-base sm:text-lg font-cairo">تغذية راجعة</h4>
+                        </div>
+                        <p id="feedback-text" class="text-xs sm:text-sm leading-relaxed mb-4">تفاصيل النتيجة والتوجيه التعليمي...</p>
+                        <button id="feedback-action-btn" onclick="continueToNextQuestion()" class="px-6 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg text-xs sm:text-sm transition flex items-center space-x-2 space-x-reverse mr-auto">
+                            <span>السؤال التالي</span>
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SCREEN 3: VICTORY & OFFICIAL CERTIFICATE -->
+            <section id="screen-victory" class="hidden bg-slate-900/90 border border-amber-500/40 rounded-2xl shadow-glow p-5 sm:p-8 text-center relative overflow-hidden">
+                <div class="inline-block p-3 bg-amber-500/20 rounded-full border border-amber-400/40 mb-2 animate-bounce no-print">
+                    <span class="text-4xl sm:text-5xl">🏆</span>
+                </div>
+
+                <h2 class="text-2xl sm:text-3xl font-extrabold font-cairo text-amber-300 mb-1 no-print">
+                    تهانينا يا بطل المكتبة!
+                </h2>
+                <p class="text-amber-100/90 text-xs sm:text-sm max-w-xl mx-auto mb-5 no-print">
+                    لقد أتممت بنجاح الإجابة عن جميع الأسئلة العشرين وحافظت على أوراقك، ووصلت إلى رفّك الصحيح في المكتبة الرئيسية للمطالعة العمومية لولاية غليزان!
+                </p>
+
+                <!-- Printable Official Certificate Card -->
+                <div id="certificate-card" class="book-page-bg border-4 border-double border-amber-900 rounded-2xl p-5 sm:p-8 max-w-2xl mx-auto shadow-2xl relative text-stone-900 text-right mb-6">
+                    <!-- Watermark Seal Top Right -->
+                    <div class="absolute top-4 left-4 border-2 border-amber-800/40 rounded-full w-20 h-20 flex items-center justify-center rotate-12 pointer-events-none select-none">
+                        <span class="text-[9px] font-black text-amber-900/60 text-center uppercase leading-tight">المكتبة الرئيسية<br>غليزان</span>
+                    </div>
+
+                    <!-- Official Header Text -->
+                    <div class="text-center border-b-2 border-amber-800/30 pb-3 mb-4">
+                        <h4 class="text-amber-900 font-bold text-xs sm:text-sm">الجمهورية الجزائرية الديمقراطية الشعبية</h4>
+                        <h5 class="text-amber-900 font-semibold text-xs sm:text-sm">وزارة الثقافة والفنون</h5>
+                        <h5 class="text-amber-900 font-bold text-xs sm:text-sm mt-0.5">المكتبة الرئيسية للمطالعة العمومية لولاية غليزان</h5>
+                    </div>
+
+                    <div class="text-center my-3">
+                        <span class="bg-amber-800 text-amber-100 px-3 py-1 rounded-full font-bold text-xs tracking-wider uppercase">شهادة إنجاز واستكشاف مكتبي</span>
+                        <h3 id="cert-badge-title" class="text-xl sm:text-2xl font-black font-cairo text-amber-950 mt-2">وسام "حارس المكتبة المتميز" 🏅</h3>
+                    </div>
+
+                    <p class="text-xs sm:text-sm text-stone-800 leading-relaxed mb-4 text-center">
+                        تشهد إدارة المكتبة الرئيسية للمطالعة العمومية لولاية غليزان بأن القارئ البطل:
+                        <br>
+                        <strong id="cert-player-name" class="text-lg sm:text-xl text-amber-950 font-black underline decoration-amber-600 my-1.5 inline-block">الاسم</strong>
+                        <br>
+                        قد أتم بنجاح الإجابة عن <strong>(20 سؤالاً)</strong> بنسبة نجاح (<strong id="cert-percentage" class="text-amber-900 font-bold">100%</strong>) حول قواعد التصنيف والعناية بالكتب والبحث المكتبي، وتوج بجدارة بلقب <strong id="cert-rank-title" class="text-amber-950 font-black">حارس المكتبة المتميز</strong>.
+                    </p>
+
+                    <!-- Score Breakdown Grid -->
+                    <div class="grid grid-cols-3 gap-2 bg-amber-100/70 p-3 rounded-xl border border-amber-800/30 text-center text-xs mb-4">
+                        <div>
+                            <span class="text-stone-600 block">سلامة الأوراق</span>
+                            <strong id="cert-health" class="text-emerald-700 text-sm font-bold">100%</strong>
+                        </div>
+                        <div>
+                            <span class="text-stone-600 block">نقاط المعرفة</span>
+                            <strong id="cert-score" class="text-amber-800 text-sm font-bold">200</strong>
+                        </div>
+                        <div>
+                            <span class="text-stone-600 block">نسبة النجاح</span>
+                            <strong id="cert-score-percent" class="text-amber-900 text-sm font-bold">100%</strong>
+                        </div>
+                    </div>
+
+                    <!-- Date & Bottom-Left Watermark SM/1628 -->
+                    <div class="flex items-center justify-between text-xs text-stone-700 font-semibold border-t border-amber-800/20 pt-3">
+                        <div>
+                            <span>تاريخ الإنجاز: </span>
+                            <span id="cert-date">--/--/----</span>
+                        </div>
+                        <!-- Certificate Watermark Tag SM/1628 -->
+                        <div class="font-mono text-amber-900/80 font-bold border border-amber-800/30 px-2 py-0.5 rounded text-[11px] flex items-center space-x-1 space-x-reverse">
+                            <i class="fa-solid fa-shield-halved text-amber-800"></i>
+                            <span>SM/1628</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex items-center justify-center gap-3 flex-wrap no-print">
+                    <button onclick="window.print()" class="px-6 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl shadow transition flex items-center space-x-2 space-x-reverse">
+                        <i class="fa-solid fa-print"></i>
+                        <span>طباعة الشهادة الرسمية</span>
+                    </button>
+                    <button onclick="resetGame()" class="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold rounded-xl border border-amber-700/50 transition flex items-center space-x-2 space-x-reverse">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        <span>إعادة المغامرة من جديد</span>
+                    </button>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script>
+        /* WEB AUDIO SYNTHESIZER FOR SOUND EFFECTS */
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+
+            playClick() {
+                if (!this.enabled) return;
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.05);
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.05);
+            }
+
+            playCorrect() {
+                if (!this.enabled) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(now + 0.4);
+            }
+
+            playWrong() {
+                if (!this.enabled) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.setValueAtTime(180, now + 0.15);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(now + 0.35);
+            }
+
+            playVictory() {
+                if (!this.enabled) return;
+                this.init();
+                const notes = [400, 500, 600, 800];
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.2, this.ctx.currentTime + idx * 0.12);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + idx * 0.12 + 0.25);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(this.ctx.currentTime + idx * 0.12);
+                    osc.stop(this.ctx.currentTime + idx * 0.12 + 0.25);
+                });
+            }
+        }
+
+        const soundFx = new SoundEngine();
+
+        function toggleAudio() {
+            soundFx.enabled = !soundFx.enabled;
+            const icon = document.getElementById('sound-icon');
+            if (soundFx.enabled) {
+                icon.className = 'fa-solid fa-volume-high';
+            } else {
+                icon.className = 'fa-solid fa-volume-xmark text-red-400';
+            }
+        }
+
+        // GAME STATE
+        let gameState = {
+            playerName: '',
+            persona: 'dict',
+            health: 100,
+            score: 0,
+            currentQuestion: 0,
+            correctAnswersCount: 0,
+            currentShuffledChoices: [],
+            currentCorrectIndex: -1
+        };
+
+        // 20 FULL LIBRARY & PAPER CARE QUESTIONS
+        const questionsData = [
+            {
+                title: "محطة 1: التعريف بالقاموس والمعجم",
+                icon: "📖",
+                subtitle: "قسم المراجع الرئيسية",
+                text: "أنت كتاب تحتوي على شرح معاني الكلمات والمصطلحات وتراكيب اللغة مرتبة ألفبائياً. أين يجب أن تكون مكانك الصحيح في المكتبة العمومية؟",
+                choices: [
+                    "في رف قصص الأطفال والرسوم التوضيحية",
+                    "في قسم المراجع والقواميس المخصص للمطالعة الداخلية",
+                    "في قسم المجلات والصحف اليومية",
+                    "في صندوق الألعاب والنشاطات"
+                ],
+                correctIndex: 1,
+                explanation: "المعاجم والقواميس هي مراجع أساسية توضع في قسم المراجع ولا تُعار خارجياً عادةً لتبقى متاحة لجميع الباحثين."
+            },
+            {
+                title: "محطة 2: التحدي البيئي - أشعة الشمس المباشرة",
+                icon: "☀️",
+                subtitle: "العناية بأوراق الكتاب",
+                text: "لاحظت أن ضوء الشمس المباشر والساطع يسقط مباشرة على أوراقك عند النافذة. ما هو التصرف المكتبي الصحيح لحماية الورق؟",
+                choices: [
+                    "فتح الصفحات بالكامل نحو الشمس للتجفيف",
+                    "إبعاد الكتاب عن الضوء المباشر والحرارة لمنع اصفرار وجفاف الورق",
+                    "ترك الكتاب تحت الشمس لتعطيره",
+                    "رش أوراق الكتاب بالماء البارد"
+                ],
+                correctIndex: 1,
+                explanation: "الأشعة فوق البنفسجية والحرارة العالية تؤدي إلى تحلل ألياف الورق واصفرارها وجعلها هشة سهلة التمزق."
+            },
+            {
+                title: "محطة 3: التعامل مع الصفحات الممزقة",
+                icon: "🩹",
+                subtitle: "إصلاح وترميم الكتب",
+                text: "أثناء تصفح أحد القراء، حدث تمزق بسيط في طرف إحدى الصفحات. كيف يجب التصرف؟",
+                choices: [
+                    "إبلاغ المكتبي لتصليحها باستخدام شريط ترميم ورق مخصص خالي من الحموضة",
+                    "استخدام شريط لاصق تجاري عادي وتثبيته بقوة",
+                    "قص الجزء الممزق وررميه في السلة",
+                    "طوي الصفحة الممزقة وتركها"
+                ],
+                correctIndex: 0,
+                explanation: "المكتبات تستخدم أشرطة ترميم خاصة خالية من الأحماض حتى لا تتلف أوراق الكتاب على المدى الطويل."
+            },
+            {
+                title: "محطة 4: الترقيم والتصنيف المكتبي",
+                icon: "🏷️",
+                subtitle: "نظام تنظيم الرفوف",
+                text: "ما هو الرمز أو الرقم المكتوب على كعب الكتاب والذي يساعد القارئ والمكتبي في إيجاد الكتاب على الرف بسرعة؟",
+                choices: [
+                    "رقم الهاتف الخاص بالمكتبة",
+                    "سعر شراء الكتاب",
+                    "رقم التصنيف (الكعب) وفق نظام ديوي العشري",
+                    "عدد صفحات الكتاب الإجمالي"
+                ],
+                correctIndex: 2,
+                explanation: "رمز التصنيف على كعب الكتاب هو العنوان الفريد الذي يحدد موقع الكتاب الدقيق بين أقرانه على الرفوف."
+            },
+            {
+                title: "محطة 5: التعامل مع الأطلس والخرائط",
+                icon: "🗺️",
+                subtitle: "كتب الجغرافيا والخرائط",
+                text: "كتاب الأطلس يتميز بحجمه الكبير وصفحاته الملونة العريضة. كيف يحفظ بشكل آمن على الرف؟",
+                choices: [
+                    "ثني صفحاته الكبيرة لتدخل في رف صغير",
+                    "وضعه على رف أفقياً أو رُف عريض مخصص للكتب كبيرة الحجم",
+                    "وضعه مقلوباً على غلافه الأمامي",
+                    "ضغطه بين كتابين صغيرين بقوة"
+                ],
+                correctIndex: 1,
+                explanation: "الكتب الكبيرة كالأطالس تحتاج لرفوف عريضة أو الحفظ الأفقي لحماية كعب الكتاب من الانكسار."
+            },
+            {
+                title: "محطة 6: خطر الرطوبة والماء",
+                icon: "💧",
+                subtitle: "التحديات البيولوجية",
+                text: "سقطت قطرات من الماء بالقرب من الكتاب. ما الخطر الحقيقي الذي تسببه الرطوبة على أوراق الكتب؟",
+                choices: [
+                    "تزيد من نصاعة لون الحبر",
+                    "تعلّم الكتاب كيفية السباحة",
+                    "تسبّب نمو الفطريات وتلاصق الصفحات وتلف الورق",
+                    "تعلّي من قيمة الكتاب المادية"
+                ],
+                correctIndex: 2,
+                explanation: "الرطوبة العالية هي العدو الأول للورق، حيث تشجع نمو العفن والفطريات التي تأكل الألياف الورقية."
+            },
+            {
+                title: "محطة 7: قواعد الإعارة الخارجية",
+                icon: "📅",
+                subtitle: "نظام إعارة الكتب",
+                text: "عند استعارة كتاب من المكتبة العمومية، ما هو الالتزام الأخلاقي والسلوكي الواجب على القارئ؟",
+                choices: [
+                    "إعادة الكتاب في الموعد المحدد وبحالة سليمة ليستفيد منه بقية القرّاء",
+                    "الاحتفاظ بالكتاب للابد في المنزل",
+                    "إعارة الكتاب لأصدقاء آخرين دون علم المكتبة",
+                    "الكتابة على هامش الصفحات لتسجيل الملاحظات"
+                ],
+                correctIndex: 0,
+                explanation: "الإعارة قائمة على المشاركة والمواطنة؛ فإعادة الكتاب بموعده يتيح للجميع فرصة القراءة والتعلم."
+            },
+            {
+                title: "محطة 8: صفحة العنوان والبيانات ببداية الكتاب",
+                icon: "📑",
+                subtitle: "عناصر الكتاب المطبوع",
+                text: "أين تجد عادة اسم المؤلِف، دار النشر، سنة الطبع، والرقم الدولي المعياري (ISBN)؟",
+                choices: [
+                    "في الغلاف الخارجي الخلفي فقط",
+                    "في منتصف القصة بشكل عشوائي",
+                    "في صفحة العنوان والبيانات التوثيقية الداخلية ببداية الكتاب",
+                    "في صفحة الخاتمة والمراجع"
+                ],
+                correctIndex: 2,
+                explanation: "صفحة التوثيق (العنوان الداخلي) تحتوي كل بطاقة هوية الكتاب وبيانات النشر الرسمية."
+            },
+            {
+                title: "محطة 9: أهمية الفهرس",
+                icon: "🔍",
+                subtitle: "أدوات البحث داخل الكتاب",
+                text: "ما هي الوظيفة الأساسية للفهرس في بداية أو نهاية الكتاب؟",
+                choices: [
+                    "تزيين الكتاب بأشكال هندسية",
+                    "مساعدة القارئ على الوصول إلى الفصول والمواضيع ورقم الصفحة بسرعة",
+                    "زيادة عدد أوراق الكتاب دون فائدة",
+                    "عرض أسماء أصدقاء الكاتب"
+                ],
+                correctIndex: 1,
+                explanation: "الفهرس هو خريطة الطريق داخل الكتاب التي توفر وقت القارئ في الوصول للعلومات المطلوب."
+            },
+            {
+                title: "محطة 10: حماية الكتب من الغبار والأتربة",
+                icon: "🧹",
+                subtitle: "النظافة والصيانة الدورية",
+                text: "تراكمت طبقة خفيفة من الغبار على أعالي الكتب. ما هي طريقة التنظيف المكتبي الصحيحة؟",
+                choices: [
+                    "غسل الكتب بالماء والصابون",
+                    "نفخ الغبار بالفم بقوة داخل القاعة",
+                    "ترك الغبار لأنه يحمي الكتاب",
+                    "مسح الغبار بفرشاة ناعمة أو قماش جاف ونظيف باتجاه الخارج"
+                ],
+                correctIndex: 3,
+                explanation: "التنظيف الجاف بفرشاة ناعمة يزيل الأتربة دون إدخال الرطوبة أو خدش أوراق الكتاب."
+            },
+            {
+                title: "محطة 11: مفهوم المطالعة العمومية",
+                icon: "🏛️",
+                subtitle: "دور المكتبة في المجتمع",
+                text: "ماذا تعني 'المكتبة الرئيسية للمطالعة العمومية'؟",
+                choices: [
+                    "مؤسسة خاصة تبيع الكتب بأسعار مرتفعة",
+                    "مرفق ثفافي عمومي مفتوح لكل أفراد المجتمع للقراءة، البحث، والتثقيف مجاناً",
+                    "متحف للقطع الأثرية القديمة فقط",
+                    "مدرسة تعليمية خاصة بالأطفال فقط"
+                ],
+                correctIndex: 1,
+                explanation: "مكتبات المطالعة العمومية هي منارات فكرية تتيح المعرفة لكافة فئات المجتمع بدون استثناء."
+            },
+            {
+                title: "محطة 12: آداب قاعة المطالعة",
+                icon: "🤫",
+                subtitle: "السلوك داخل قاعات القراءة",
+                text: "عند دخولك لقاعة المطالعة الرئيسية بالمكتبة، ما هو السلوك الواجب اتباعه؟",
+                choices: [
+                    "التحدث بصوت مرتفع والرد على المكالمات الهاتفية",
+                    "تناول المأكولات والمشروبات الملونة فوق الطاولات",
+                    "الالتزام بالهدوء التام والسكينة لاحترام تركيز القراء الآخرين",
+                    "الجري بين رفوف الكتب"
+                ],
+                correctIndex: 2,
+                explanation: "الهدوء هو الركن الأساسي لقاعة المطالعة لتوفير بيئة مريحة للبحث والقراءة الجادة."
+            },
+            {
+                title: "محطة 13: فاصلة الكتب (Bookmark)",
+                icon: "🔖",
+                subtitle: "أدوات القارئ الذكي",
+                text: "عندما تريد التوقف عن القراءة والعودة لاحقاً، ما هو الخيار الأفضل لتحديد مكان توقفك؟",
+                choices: [
+                    "استخدام فاصلة كتب ورقية أو شريطية مخصصة",
+                    "ثني زاوية الورقة بقوة",
+                    "وضع القلم الجاف مفتوحاً داخل الكتاب وإغلاقه",
+                    "قلب الكتاب مفتوحاً على وجهه فوق الطاولة"
+                ],
+                correctIndex: 0,
+                explanation: "استخدام الفاصلة يحمي أوراق الكتاب من التكسر والثني ويحافظ على جماليته."
+            },
+            {
+                title: "محطة 14: تصنيف ديوي العشري",
+                icon: "🔢",
+                subtitle: "الأنظمة المكتبية العالمية",
+                text: "نظام تصنيف ديوي العشري يقسم المعرفة البشرية والعلوم إلى كم قسم رئيسي؟",
+                choices: [
+                    "3 أقسام فقط",
+                    "100 قسم دون تفرع",
+                    "10 أقسام رئيسية (من 000 إلى 900)",
+                    "قسم واحد لكل دولة"
+                ],
+                correctIndex: 2,
+                explanation: "يقسم نظام ديوي المعرفة إلى 10 أصول رئيسية مثل: المعارف العامة، الفلسفة، الدين، العلوم الاجتماعية، اللغات، العلوم، الفنون، الأدب، والتاريخ."
+            },
+            {
+                title: "محطة 15: التعامل مع الأسطح المتسخة والأيدي",
+                icon: "🧼",
+                subtitle: "النظافة الشخصية والكتب",
+                text: "قبل البدء بتصفح كتاب قيم في المكتبة، ما الخطوة الأهم التي تحمي أوراق الكتاب من البقع؟",
+                choices: [
+                    "لبس القفازات الحديدية",
+                    "غسل اليدين جيداً وتجفيفهما قبل مسك الكتاب",
+                    "وضع كمية من الزيت على الأصابع لسهولة التقليب",
+                    "تصفح الكتاب سريعاً دون الاهتمام بنظافة اليد"
+                ],
+                correctIndex: 1,
+                explanation: "زيوت البشرة الطبيعية والأوساخ تنقل البقع للصفحات وتجذب الحشرات الدقيقة."
+            },
+            {
+                title: "محطة 16: دور المكتبي (أخصائي المعلومات)",
+                icon: "👨‍💼",
+                subtitle: "مرشد القراء والمستكشفين",
+                text: "كيف يساعدك المكتبي الموجود في قاعة الاستقبال والمطالعة؟",
+                choices: [
+                    "يمنعك من قراءة أي كتاب",
+                    "يطلب منك كتابة كتاب جديد فوراً",
+                    "يرشدك لاستخدام الفهرس والوصول للكتب والمراجع المناسبة لبحثك بسهولة",
+                    "يبيع لك الأدوات المدرسية"
+                ],
+                correctIndex: 2,
+                explanation: "المكتبي هو الدليل الماهر الذي يوجهك نحو مصادر المعرفة ويختصر عليك وقت البحث."
+            },
+            {
+                title: "محطة 17: تقليب الصفحات بشكل صحيح",
+                icon: "🖐️",
+                subtitle: "الحركة الميكانيكية لليد",
+                text: "ما هي الطريقة السليمة لتقليب أوراق الكتاب أثناء القراءة؟",
+                choices: [
+                    "بل الأصابع باللعاب قبل كل صفحة",
+                    "شد الصفحة بقوة من منتصفها",
+                    "استخدام مسطرة حادة لرفع الورقة",
+                    "تقليب الصفحة بحذر وسلاسة من الزاوية العلوية أو الجانبية بأصابع جافة"
+                ],
+                correctIndex: 3,
+                explanation: "التقليب من الزوايا بحذر يمنع تمزق الحواف ويحافظ على نظافة الصفحات وصحتك."
+            },
+            {
+                title: "محطة 18: المجلات والدوريات العلمية",
+                icon: "📰",
+                subtitle: "المطبوعات الدورية",
+                text: "بماذا تتميز 'المجلات والدوريات' عن الكتب العادية في المكتبة؟",
+                choices: [
+                    "تصلح للاستخدام مرة واحدة فقط ثم تُرمى",
+                    "تصدر بانتظام (أسبوعياً أو شهرياً) وتحتوي مقالات وأخبار علمية حديثة ومبتكرة",
+                    "لا تحتوي على أي كلمات بل صور فقط",
+                    "كتب ضخمة جداً لا يمكن حملها"
+                ],
+                correctIndex: 1,
+                explanation: "الدوريات تقدم أحدث المستجدات والأبحاث وتصدر بشكل منتظم في أعداد متسلسلة."
+            },
+            {
+                title: "محطة 19: خطر الكتابة بالرصاص أو الحبر",
+                icon: "✏️",
+                subtitle: "الملكية العامة للمحتوى",
+                text: "لماذا يُمنع التخطيط أو الكتابة بقلم الحبر أو الرصاص على كتب المكتبة العمومية؟",
+                choices: [
+                    "لأن القلم قد ينتهي حبره",
+                    "لأن الكتاب ملكية عامة لجميع القراء ويجب أن يبقى نظيفاً دون تشويه",
+                    "لأن الكتابة تجعل الخط غير واضح فقط",
+                    "لأن الورق يصدر صوتاً عند الكتابة"
+                ],
+                correctIndex: 1,
+                explanation: "كتب المكتبة ملك للجميع؛ والكتابة عليها تشوه النص وتضايق القراء الذين سيعتمدون عليه بعدك."
+            },
+            {
+                title: "محطة 20: بطاقة العضوية والمشاركة الثقافية",
+                icon: "💳",
+                subtitle: "الوصول النهائي للرف الصحيح",
+                text: "ما الميزة التي تمنحها لك بطاقة الاشتراك والعضوية في المكتبة الرئيسية لولاية غليزان؟",
+                choices: [
+                    "إمكانية الاستعارة الخارجية للمطالعة في المنزل والمشاركة في الورشات الثقافية والنوادي",
+                    "السماح بالدخول للمكتبة فقط دون قراءة",
+                    "امتلاك المكتبة بالكامل",
+                    "مجرد بطاقة زينة لا فائدة منها"
+                ],
+                correctIndex: 0,
+                explanation: "بطاقة العضوية هي مفتاحك الذهبي للاستفادة من كافة خدمات المكتبة واستعارة الكتب والاندماج في أنشطتها."
+            }
+        ];
+
+        function selectPersona(personaKey) {
+            gameState.persona = personaKey;
+            soundFx.playClick();
+            document.querySelectorAll('.persona-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-amber-950/80', 'border-amber-400');
+                btn.classList.add('bg-slate-800', 'border-slate-700');
+            });
+            event.currentTarget.classList.add('active', 'bg-amber-950/80', 'border-amber-400');
+            event.currentTarget.classList.remove('bg-slate-800', 'border-slate-700');
+        }
+
+        function startGame() {
+            const input = document.getElementById('player-name-input');
+            const name = input.value.trim();
+            if (!name) {
+                alert('الرجاء إدخال اسمك يا بطل المكتبة للانطلاق!');
+                input.focus();
+                return;
+            }
+
+            gameState.playerName = name;
+            gameState.health = 100;
+            gameState.score = 0;
+            gameState.currentQuestion = 0;
+            gameState.correctAnswersCount = 0;
+
+            soundFx.playClick();
+
+            document.getElementById('screen-welcome').classList.add('hidden');
+            document.getElementById('screen-gameplay').classList.remove('hidden');
+            document.getElementById('game-stats').classList.remove('hidden');
+
+            document.getElementById('display-player-name').innerText = name;
+
+            updateStatsDisplay();
+            renderQuestion(0);
+        }
+
+        function updateStatsDisplay() {
+            document.getElementById('health-text').innerText = `${gameState.health}%`;
+            document.getElementById('score-text').innerText = gameState.score;
+            document.getElementById('question-progress-text').innerText = `${gameState.currentQuestion + 1} / 20`;
+            
+            const progressPercent = ((gameState.currentQuestion + 1) / 20) * 100;
+            document.getElementById('progress-bar-inner').style.width = `${progressPercent}%`;
+        }
+
+        function renderQuestion(index) {
+            const q = questionsData[index];
+            
+            // Map choices to objects to keep track of correctness
+            let options = q.choices.map((choiceText, origIdx) => ({
+                text: choiceText,
+                isCorrect: (origIdx === q.correctIndex)
+            }));
+
+            // Fisher-Yates shuffle algorithm to randomize choice order dynamically
+            for (let i = options.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [options[i], options[j]] = [options[j], options[i]];
+            }
+
+            // Save the current shuffled order and find the new correct index
+            gameState.currentShuffledChoices = options;
+            gameState.currentCorrectIndex = options.findIndex(opt => opt.isCorrect);
+
+            document.getElementById('question-badge').innerText = `السؤال ${index + 1} من 20`;
+            document.getElementById('scene-title').innerText = q.title;
+            document.getElementById('scene-icon-bg').innerText = q.icon;
+            document.getElementById('scene-subtitle').innerText = q.subtitle;
+            document.getElementById('scene-text').innerText = q.text;
+
+            // Reset Feedback Modal
+            const feedbackModal = document.getElementById('feedback-modal');
+            feedbackModal.classList.add('hidden');
+
+            // Render Neutral Choices (Shuffled & Random Positioned)
+            const choicesContainer = document.getElementById('choices-container');
+            choicesContainer.innerHTML = '';
+
+            options.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'choice-btn w-full text-right p-3.5 sm:p-4 bg-slate-800 hover:bg-amber-950/70 border border-amber-900/40 hover:border-amber-500/60 rounded-xl transition text-xs sm:text-sm text-amber-100 flex items-center space-x-3 space-x-reverse';
+                
+                const optionCharArabic = ['أ', 'ب', 'ج', 'د'][i] || (i + 1);
+
+                btn.innerHTML = `
+                    <span class="w-7 h-7 flex-shrink-0 bg-amber-950 border border-amber-600/50 rounded-lg text-amber-300 font-bold flex items-center justify-center text-xs">
+                        ${optionCharArabic}
+                    </span>
+                    <span class="flex-grow leading-relaxed">${opt.text}</span>
+                `;
+
+                btn.onclick = () => handleChoiceSelection(i);
+                choicesContainer.appendChild(btn);
+            });
+
+            updateStatsDisplay();
+        }
+
+        function handleChoiceSelection(selectedIndex) {
+            const q = questionsData[gameState.currentQuestion];
+            const isCorrect = (selectedIndex === gameState.currentCorrectIndex);
+
+            // Disable all choice buttons after pick
+            const buttons = document.querySelectorAll('#choices-container button');
+            buttons.forEach(b => b.disabled = true);
+
+            const feedbackModal = document.getElementById('feedback-modal');
+            const feedbackIcon = document.getElementById('feedback-icon');
+            const feedbackTitle = document.getElementById('feedback-title');
+            const feedbackText = document.getElementById('feedback-text');
+
+            if (isCorrect) {
+                soundFx.playCorrect();
+                gameState.score += 10;
+                gameState.correctAnswersCount++;
+
+                // Visual styling for chosen button
+                buttons[selectedIndex].classList.remove('bg-slate-800', 'border-amber-900/40');
+                buttons[selectedIndex].classList.add('bg-emerald-950/80', 'border-emerald-500', 'text-emerald-200');
+
+                feedbackModal.className = 'mt-5 p-4 rounded-xl border border-emerald-500/50 bg-emerald-950/60 text-right animate-fade-in block';
+                feedbackIcon.innerText = '✨';
+                feedbackTitle.innerText = 'إجابة صحيحة وممتازة! (+10 نقاط)';
+                feedbackTitle.className = 'font-bold text-base sm:text-lg font-cairo text-emerald-300';
+                feedbackText.innerText = q.explanation;
+                feedbackText.className = 'text-xs sm:text-sm leading-relaxed mb-4 text-emerald-100';
+
+            } else {
+                soundFx.playWrong();
+                gameState.health = Math.max(0, gameState.health - 5);
+
+                // Highlight chosen wrong answer
+                buttons[selectedIndex].classList.remove('bg-slate-800', 'border-amber-900/40');
+                buttons[selectedIndex].classList.add('bg-rose-950/80', 'border-rose-500', 'text-rose-200');
+
+                // Highlight the actual correct answer dynamically
+                buttons[gameState.currentCorrectIndex].classList.remove('bg-slate-800');
+                buttons[gameState.currentCorrectIndex].classList.add('bg-emerald-950/50', 'border-emerald-500/70', 'text-emerald-200');
+
+                feedbackModal.className = 'mt-5 p-4 rounded-xl border border-rose-500/50 bg-rose-950/60 text-right animate-fade-in block';
+                feedbackIcon.innerText = '💡';
+                feedbackTitle.innerText = 'تنبيه مكتبي: إجابة تحتاج تصحيحاً';
+                feedbackTitle.className = 'font-bold text-base sm:text-lg font-cairo text-rose-300';
+                feedbackText.innerText = `${q.explanation}`;
+                feedbackText.className = 'text-xs sm:text-sm leading-relaxed mb-4 text-rose-100';
+            }
+
+            updateStatsDisplay();
+        }
+
+        function continueToNextQuestion() {
+            soundFx.playClick();
+            gameState.currentQuestion++;
+
+            if (gameState.currentQuestion < questionsData.length) {
+                renderQuestion(gameState.currentQuestion);
+            } else {
+                showVictoryScreen();
+            }
+        }
+
+        function showVictoryScreen() {
+            soundFx.playVictory();
+
+            document.getElementById('screen-gameplay').classList.add('hidden');
+            document.getElementById('screen-victory').classList.remove('hidden');
+
+            const scorePercent = Math.round((gameState.correctAnswersCount / 20) * 100);
+
+            // Dynamic Badge and Title determination based strictly on Score Percentage
+            let badgeTitle = '';
+            let rankTitle = '';
+
+            if (scorePercent === 100) {
+                badgeTitle = 'وسام "حارس المكتبة المتميز" 🏅';
+                rankTitle = 'حارس المكتبة المتميز';
+            } else if (scorePercent >= 80) {
+                badgeTitle = 'وسام "حارس المكتبة المتقدم" 🥈';
+                rankTitle = 'حارس المكتبة المتقدم';
+            } else if (scorePercent >= 60) {
+                badgeTitle = 'وسام "باحث المكتبة المستكشف" 🥉';
+                rankTitle = 'باحث المكتبة المستكشف';
+            } else {
+                badgeTitle = 'وسام "صديق المكتبة المكتشف" 🌟';
+                rankTitle = 'صديق المكتبة المكتشف';
+            }
+
+            // Populate Official Certificate
+            document.getElementById('cert-player-name').innerText = gameState.playerName;
+            document.getElementById('cert-badge-title').innerText = badgeTitle;
+            document.getElementById('cert-rank-title').innerText = rankTitle;
+            document.getElementById('cert-percentage').innerText = `${scorePercent}%`;
+            document.getElementById('cert-health').innerText = `${gameState.health}%`;
+            document.getElementById('cert-score').innerText = gameState.score;
+            document.getElementById('cert-score-percent').innerText = `${scorePercent}%`;
+
+            // Current date formatting
+            const today = new Date();
+            const dateStr = today.toLocaleDateString('ar-DZ', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('cert-date').innerText = dateStr;
+
+            // Trigger Confetti
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 120,
+                    spread: 80,
+                    origin: { y: 0.6 }
+                });
+            }
+        }
+
+        function resetGame() {
+            soundFx.playClick();
+            document.getElementById('screen-victory').classList.add('hidden');
+            document.getElementById('game-stats').classList.add('hidden');
+            document.getElementById('screen-welcome').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
